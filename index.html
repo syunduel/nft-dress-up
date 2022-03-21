@@ -24,8 +24,7 @@
     <div id="nfts"></div>
 
     <div id="dress-up">
-      <svg id="dress-up-svg" viewBox="0 0 841.9 595.3">
-      </svg>
+      <canvas id="dress-up-canvas" width="900" height="900"></canvas>
     </div>
 
     <script>
@@ -33,6 +32,9 @@
       const baseNftAddress = "0x90a3fba08fe9066ccbb4cab3e94301df7a4312c4";
       const baseNftImgHash = "QmWsNgLwBLiqGpUrhUS48ejRFAgUA92ChF6Xo45uMKWnmQ";
       const tokenIdDigit = 4;
+      const baseNftChain = "rinkeby";
+
+      var nfts = null;
 
       // connect to Moralis server
 
@@ -112,7 +114,7 @@
         const options = {
           chain: "rinkeby",
         };
-        const nfts = await Moralis.Web3API.account.getNFTs(options);
+        nfts = await Moralis.Web3API.account.getNFTs(options);
         console.log("getNFTs: ", nfts);
 
         renderNFTs(nfts);
@@ -131,19 +133,67 @@
           .join("");
       }
 
-      // function selectNFT(address, token_id) {
-      //   const container = document.getElementById("selected-nft");
-      //   var nowTokenId = zeroPadding(token_id, tokenIdDigit);
-      //   container.innerHTML = `<img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="512" height="512" alt="">`;
-      // }
+      const dressUpCanvasContext = document.getElementById('dress-up-canvas').getContext('2d');
 
       function selectNFT(address, token_id) {
         var dressUpSvg = Snap("#dress-up-svg");
-        var nowTokenId = zeroPadding(token_id, tokenIdDigit);
-        Snap.load(`https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png`, function (f) {
-          dressUpSvg.append(f);
-        })
-        alert('it\'s work!');
+
+        const selectedNFTMetadataOptions = { address: address, token_id: token_id, chain: baseNftChain };
+        // console.log(selectedNFTMetadataOptions);
+        const selectedNFTMetadata = Moralis.Web3API.token.getTokenIdMetadata(selectedNFTMetadataOptions);
+        console.log(selectedNFTMetadata);
+
+        const selectedNFTTokenUri = selectedNFTMetadata.token_uri;
+        console.log(selectedNFTTokenUri);
+
+
+        // https://ipfs.io/ipfs/QmTYNytZYkKjUaizJJbLx6GysWBDi3vk8hYWEAKdKi2MAV/447.json
+
+
+        // 背景
+        // var partsUriBackground = getPartsUri(address, token_id, "background", selectedNFTMetadata.background);
+        var partsUriBackground = getPartsUri(address, token_id, "background", "[R]Blue Pinstripe2");
+        // alert(partsUriBackground);
+
+        var imgBackground = new Image();
+        imgBackground.onload = () => resolve(imgBackground);
+        imgBackground.src = partsUriBackground;
+
+        // dressUpCanvasContext.drawImage(partsUriBackground, 0, 0, 300, 300);
+
+        // 後ろ髪
+
+        // 服
+
+        // 顔
+
+        // 前髪
+
+        const imgs = [
+          './gen-res/LAG/background/[R]Blue Pinstripe2.png',
+          './gen-res/LAG/body/[R]Casual Brown.png'
+        ];
+
+        const loadImage = url => {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.src = url;
+          });
+        };
+
+        Promise.all(imgs.map(loadImage)).then(imgs => {
+          imgs.forEach(img => {
+            dressUpCanvasContext.drawImage(img, 0, 0, 900, 900);
+          });
+        });
+
+        // alert('it\'s work!');
+      }
+
+      // パーツのURLを返します。
+      function getPartsUri(address, token_id, parts, item_name) {
+        return "./gen-res/LAG/" + parts + "/" + item_name + ".png";
       }
 
       function zeroPadding(token_id, zeroPaddingLength) {
