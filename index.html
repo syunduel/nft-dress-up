@@ -1,0 +1,139 @@
+<html>
+  <head>
+    <!-- Moralis SDK code -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+  </head>
+  <body>
+    <h1>Gas Stats With Moralis</h1>
+
+    <button id="btn-login">Moralis Login</button>
+    <button id="btn-get-stats">Refresh Stats</button>
+    <button id="btn-logout">Logout</button>
+
+    <div id="gas-stats"></div>
+    <div id="nfts"></div>
+
+    <div id="selected">
+      <div id="selected-nft"></div>
+    </div>
+
+    <script>
+
+      const baseNftAddress = "0x90a3fba08fe9066ccbb4cab3e94301df7a4312c4";
+      const baseNftImgHash = "QmWsNgLwBLiqGpUrhUS48ejRFAgUA92ChF6Xo45uMKWnmQ";
+      const tokenIdDigit = 4;
+
+      // connect to Moralis server
+
+      const serverUrl = "https://g9lvpe1ew1nl.usemoralis.com:2053/server";
+      const appId = "t8IrAottqn4oyh4g8Ti8ai363GEQIsWSk0z9Jzoi";
+      Moralis.start({ serverUrl, appId });
+
+      // add from here down
+      async function login() {
+        let user = Moralis.User.current();
+        if (!user) {
+          user = await Moralis.authenticate();
+        }
+        console.log("logged in user:", user);
+
+        getStats();
+
+      }
+
+      async function logOut() {
+        await Moralis.User.logOut();
+        console.log("logged out");
+      }
+
+      document.getElementById("btn-login").onclick = login;
+      document.getElementById("btn-logout").onclick = logOut;
+      document.getElementById("btn-get-stats").onclick = getStats;
+
+      function getStats() {
+        const user = Moralis.User.current();
+        if (user) {
+          getUserTransactions(user);
+        }
+        getAverageGasPrices();
+        getNFTs();
+      }
+
+      async function getUserTransactions(user) {
+        // create query
+        const query = new Moralis.Query("EthTransactions");
+        query.equalTo("from_address", user.get("ethAddress"));
+
+        // subscribe to query updates
+        const subscription = await query.subscribe();
+        handleNewTransaction(subscription);
+
+        // run query
+        const results = await query.find();
+        console.log("user transactions:", results);
+      }
+
+      async function handleNewTransaction(subscription) {
+        // log each new transaction
+        subscription.on("create", function(data) {
+          console.log("new transaction: ", data);
+        });
+      }
+
+      async function getAverageGasPrices() {
+        const results = await Moralis.Cloud.run("getAvgGas");
+        console.log("average user gas prices:", results);
+
+        // renderGasStats(results);
+      }
+
+      function renderGasStats(data) {
+        const container = document.getElementById("gas-stats");
+        container.innerHTML = data
+          .map(function (row, rank) {
+            return `<li>#${rank + 1}: ${Math.round(row.avgGas)} gwei</li>`;
+          })
+          .join("");
+      }
+
+      // get rinkeby NFTs for address
+      async function getNFTs() {
+        const options = {
+          chain: "rinkeby",
+        };
+        const nfts = await Moralis.Web3API.account.getNFTs(options);
+        console.log("getNFTs: ", nfts);
+
+        renderNFTs(nfts);
+      }
+
+      function renderNFTs(nfts) {
+        const container = document.getElementById("nfts");
+        container.innerHTML = nfts.result
+          .map(function (row, rank) {
+            if (row.token_address == baseNftAddress) {
+              var nowTokenId = zeroPadding(row.token_id, tokenIdDigit);
+              // return `<div>token_address : ${row.token_address}, token_id : #${row.token_id}, name : ${row.name} <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt=""> </div>`;
+              return `<div id="${row.token_address}_${row.token_id}">${row.name} #${row.token_id} <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt=""> <button onclick="selectNFT('${row.token_address}', '${row.token_id}')">アクセサリーをつける</button></div>`;
+            }
+          })
+          .join("");
+      }
+
+      function selectNFT(address, token_id) {
+        const container = document.getElementById("selected-nft");
+        var nowTokenId = zeroPadding(token_id, tokenIdDigit);
+        container.innerHTML = `<img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="512" height="512" alt="">`;
+      }
+
+      function zeroPadding(token_id, zeroPaddingLength) {
+        return ('000000000' + token_id).slice( zeroPaddingLength * -1 );
+      }
+
+      // get stats on page load
+      getStats();
+      
+    </script>
+</body>
+</html>
