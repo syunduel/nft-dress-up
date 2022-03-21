@@ -3,6 +3,15 @@
     <!-- Moralis SDK code -->
     <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.5.1/snap.svg-min.js"></script>
+    <style>
+      svg {
+        display:block;
+        width:80%;
+        margin:0 auto;
+        border:solid 1px;
+      }
+    </style>
   </head>
   <body>
     <h1>Gas Stats With Moralis</h1>
@@ -14,8 +23,9 @@
     <div id="gas-stats"></div>
     <div id="nfts"></div>
 
-    <div id="selected">
-      <div id="selected-nft"></div>
+    <div id="dress-up">
+      <svg id="dress-up-svg" viewBox="0 0 841.9 595.3">
+      </svg>
     </div>
 
     <script>
@@ -121,10 +131,19 @@
           .join("");
       }
 
+      // function selectNFT(address, token_id) {
+      //   const container = document.getElementById("selected-nft");
+      //   var nowTokenId = zeroPadding(token_id, tokenIdDigit);
+      //   container.innerHTML = `<img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="512" height="512" alt="">`;
+      // }
+
       function selectNFT(address, token_id) {
-        const container = document.getElementById("selected-nft");
+        var dressUpSvg = Snap("#dress-up-svg");
         var nowTokenId = zeroPadding(token_id, tokenIdDigit);
-        container.innerHTML = `<img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="512" height="512" alt="">`;
+        Snap.load(`https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png`, function (f) {
+          dressUpSvg.append(f);
+        })
+        alert('it\'s work!');
       }
 
       function zeroPadding(token_id, zeroPaddingLength) {
