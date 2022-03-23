@@ -14,13 +14,12 @@
     </style>
   </head>
   <body>
-    <h1>Gas Stats With Moralis</h1>
+    <h1>NFT Dress Up </h1>
 
     <button id="btn-login">Moralis Login</button>
     <button id="btn-get-stats">Refresh Stats</button>
     <button id="btn-logout">Logout</button>
 
-    <div id="gas-stats"></div>
     <div id="nfts"></div>
 
     <div id="dress-up">
@@ -29,17 +28,32 @@
 
     <script>
 
-      const baseNftAddress = "0x90a3fba08fe9066ccbb4cab3e94301df7a4312c4";
+      // mainnet
+      const serverUrl = "https://9dtwybgsflwn.usemoralis.com:2053/server";
+      const appId = "lSWuDXblZuRVzOGqeRUMrEho6UBRfIHtCrnY7TNF";
+
+      const baseNftAddress = "0x9c99d7f09d4a7e23ea4e36aec4cb590c5bbdb0e2";
       const baseNftImgHash = "QmWsNgLwBLiqGpUrhUS48ejRFAgUA92ChF6Xo45uMKWnmQ";
       const tokenIdDigit = 4;
-      const baseNftChain = "rinkeby";
+      const baseNftChain = "eth";
+
+      // testnet
+      // const serverUrl = "https://g9lvpe1ew1nl.usemoralis.com:2053/server";
+      // const appId = "t8IrAottqn4oyh4g8Ti8ai363GEQIsWSk0z9Jzoi";
+
+      // const baseNftAddress = "0x90a3fba08fe9066ccbb4cab3e94301df7a4312c4";
+      // const baseNftImgHash = "QmWsNgLwBLiqGpUrhUS48ejRFAgUA92ChF6Xo45uMKWnmQ";
+      // const tokenIdDigit = 4;
+      // const baseNftChain = "rinkeby";
 
       var nfts = null;
 
       // connect to Moralis server
 
-      const serverUrl = "https://g9lvpe1ew1nl.usemoralis.com:2053/server";
-      const appId = "t8IrAottqn4oyh4g8Ti8ai363GEQIsWSk0z9Jzoi";
+      console.log(`serverUrl : ${serverUrl}`);
+      console.log(`appId : ${appId}`);
+      
+
       Moralis.start({ serverUrl, appId });
 
       // add from here down
@@ -68,7 +82,6 @@
         if (user) {
           getUserTransactions(user);
         }
-        getAverageGasPrices();
         getNFTs();
       }
 
@@ -93,26 +106,10 @@
         });
       }
 
-      async function getAverageGasPrices() {
-        const results = await Moralis.Cloud.run("getAvgGas");
-        console.log("average user gas prices:", results);
-
-        // renderGasStats(results);
-      }
-
-      function renderGasStats(data) {
-        const container = document.getElementById("gas-stats");
-        container.innerHTML = data
-          .map(function (row, rank) {
-            return `<li>#${rank + 1}: ${Math.round(row.avgGas)} gwei</li>`;
-          })
-          .join("");
-      }
-
       // get rinkeby NFTs for address
       async function getNFTs() {
         const options = {
-          chain: "rinkeby",
+          chain: baseNftChain,
         };
         nfts = await Moralis.Web3API.account.getNFTs(options);
         console.log("getNFTs: ", nfts);
@@ -126,6 +123,7 @@
           .map(function (row, rank) {
             if (row.token_address == baseNftAddress) {
               var nowTokenId = zeroPadding(row.token_id, tokenIdDigit);
+              console.log(`${row.token_id}`);
               // return `<div>token_address : ${row.token_address}, token_id : #${row.token_id}, name : ${row.name} <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt=""> </div>`;
               return `<div id="${row.token_address}_${row.token_id}">${row.name} #${row.token_id} <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt=""> <button onclick="selectNFT('${row.token_address}', '${row.token_id}')">アクセサリーをつける</button></div>`;
             }
@@ -135,44 +133,63 @@
 
       const dressUpCanvasContext = document.getElementById('dress-up-canvas').getContext('2d');
 
-      function selectNFT(address, token_id) {
+      const selectNFT = async(address, token_id) => {
         var dressUpSvg = Snap("#dress-up-svg");
 
+        // 最新のメタデータを取得する
         const selectedNFTMetadataOptions = { address: address, token_id: token_id, chain: baseNftChain };
         // console.log(selectedNFTMetadataOptions);
-        const selectedNFTMetadata = Moralis.Web3API.token.getTokenIdMetadata(selectedNFTMetadataOptions);
+        var selectedNFTMetadata = await Moralis.Web3API.token.getTokenIdMetadata(selectedNFTMetadataOptions);
         console.log(selectedNFTMetadata);
 
+        const selectedNFTSymbol = selectedNFTMetadata.symbol;
+        console.log("selectedNFTSymbol : " + selectedNFTSymbol);
         const selectedNFTTokenUri = selectedNFTMetadata.token_uri;
-        console.log(selectedNFTTokenUri);
+        console.log("selectedNFTTokenUri : " + selectedNFTTokenUri);
 
+        // 本来不要だが、取れる情報にattributeが無いので、仕方なくローカルのjsonを取ってくる
 
-        // https://ipfs.io/ipfs/QmTYNytZYkKjUaizJJbLx6GysWBDi3vk8hYWEAKdKi2MAV/447.json
+        // メタデータのtroken_uriから属性情報を取得する
+        // const moralisSelectedNFTTokenUri = "https://ipfs.moralis.io:2053/ipfs/" + selectedNFTTokenUri.substr(21);
+        const moralisSelectedNFTTokenUri = "./gen-res/LAG/token-uri/" + token_id + ".json";
+        console.log("moralisSelectedNFTTokenUri : " + moralisSelectedNFTTokenUri);
 
+        var moralisSelectedNFTMetadata = await getNFTTokenUri(moralisSelectedNFTTokenUri);
+
+        // 画像の配列
+        var imgs = Array();
 
         // 背景
         // var partsUriBackground = getPartsUri(address, token_id, "background", selectedNFTMetadata.background);
-        var partsUriBackground = getPartsUri(address, token_id, "background", "[R]Blue Pinstripe2");
-        // alert(partsUriBackground);
-
-        var imgBackground = new Image();
-        imgBackground.onload = () => resolve(imgBackground);
-        imgBackground.src = partsUriBackground;
-
-        // dressUpCanvasContext.drawImage(partsUriBackground, 0, 0, 300, 300);
+        var backgroundJson = moralisSelectedNFTMetadata.attributes.find((v) => v.trait_type == 'Background');
+        var partsUriBackground = getPartsUri(selectedNFTSymbol, token_id, "background", backgroundJson.value);
+        console.log("partsUriBackground : " + partsUriBackground);
+        imgs.push(partsUriBackground);
 
         // 後ろ髪
+        var hairJson = moralisSelectedNFTMetadata.attributes.find((v) => v.trait_type == 'Hair');
+        var partsUriBackhair = getPartsUri(selectedNFTSymbol, token_id, "backhair", hairJson.value);
+        console.log("partsUriBackhair : " + partsUriBackhair);
+        imgs.push(partsUriBackhair);
 
         // 服
+        var bodyJson = moralisSelectedNFTMetadata.attributes.find((v) => v.trait_type == 'Body');
+        var partsUriBody = getPartsUri(selectedNFTSymbol, token_id, "body", bodyJson.value);
+        console.log("partsUriBody : " + partsUriBody);
+        imgs.push(partsUriBody);
 
         // 顔
+        var faceJson = moralisSelectedNFTMetadata.attributes.find((v) => v.trait_type == 'Face');
+        var partsUriFace = getPartsUri(selectedNFTSymbol, token_id, "face", faceJson.value);
+        console.log("partsUriFace : " + partsUriFace);
+        imgs.push(partsUriFace);
+
+        // TODO FaceのCatはGalの画像をあてている
 
         // 前髪
-
-        const imgs = [
-          './gen-res/LAG/background/[R]Blue Pinstripe2.png',
-          './gen-res/LAG/body/[R]Casual Brown.png'
-        ];
+        var partsUriFronthair = getPartsUri(selectedNFTSymbol, token_id, "fronthair", hairJson.value);
+        console.log("partsUriFronthair : " + partsUriFronthair);
+        imgs.push(partsUriFronthair);
 
         const loadImage = url => {
           return new Promise((resolve) => {
@@ -191,14 +208,33 @@
         // alert('it\'s work!');
       }
 
+      // tokenURIのデータを取得する
+      const getNFTTokenUri = async(moralisSelectedNFTTokenUri) => {
+        const json = await fetch(moralisSelectedNFTTokenUri).then(res => res.json())
+          .then(json => {
+            console.log('selectedNFTTokenUri 取得成功');
+            console.log(json);
+            return json;
+
+          }).catch(error => {
+            console.log('selectedNFTTokenUri 取得失敗');
+            console.log(error);
+            return null;
+          });
+          
+        return json;
+      }
+
       // パーツのURLを返します。
-      function getPartsUri(address, token_id, parts, item_name) {
-        return "./gen-res/LAG/" + parts + "/" + item_name + ".png";
+      function getPartsUri(symbol, token_id, parts, item_name) {
+        return `./gen-res/${symbol}/pics/${parts}/${item_name}.png`;
       }
 
       function zeroPadding(token_id, zeroPaddingLength) {
         return ('000000000' + token_id).slice( zeroPaddingLength * -1 );
       }
+
+
 
       // get stats on page load
       getStats();
