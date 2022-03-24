@@ -16,15 +16,28 @@
   <body>
     <h1>NFT Dress Up </h1>
 
-    <button id="btn-login">Moralis Login</button>
+    <button id="btn-login">MetaMask Login</button>
     <button id="btn-get-stats">Refresh Stats</button>
     <button id="btn-logout">Logout</button>
 
     <div id="nfts"></div>
 
-    <div id="dress-up">
-      <canvas id="dress-up-canvas" width="900" height="900"></canvas>
+    <div id="dress-up-area">
+      <canvas id="dress-up-canvas" width="600" height="600"></canvas>
+      <div>
+        背景画像
+        <input type="radio" name="rdo-background" onchange="dressUp();" value="default" checked>元からの背景
+        <input type="radio" name="rdo-background" onchange="dressUp();" value="Blue Pinstripe">Blue Pinstripe
+        <input type="radio" name="rdo-background" onchange="dressUp();" value="Pink Pinstripe">Pink Pinstripe
+        <input type="radio" name="rdo-background" onchange="dressUp();" value="Violet Pinstripe">Violet Pinstripe
+      </div>
+      <div>
+        <!-- button id="btn-dress-up">着せ替え！</button -->
+        <button id="btn-save-pic">保存する！</button>
+
+      </div>
     </div>
+
 
     <script>
 
@@ -76,6 +89,8 @@
       document.getElementById("btn-login").onclick = login;
       document.getElementById("btn-logout").onclick = logOut;
       document.getElementById("btn-get-stats").onclick = getStats;
+      // document.getElementById("btn-dress-up").onclick = dressUp;
+      document.getElementById("btn-save-pic").onclick = savePic;
 
       function getStats() {
         const user = Moralis.User.current();
@@ -125,7 +140,7 @@
               var nowTokenId = zeroPadding(row.token_id, tokenIdDigit);
               console.log(`${row.token_id}`);
               // return `<div>token_address : ${row.token_address}, token_id : #${row.token_id}, name : ${row.name} <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt=""> </div>`;
-              return `<div id="${row.token_address}_${row.token_id}">${row.name} #${row.token_id} <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt=""> <button onclick="selectNFT('${row.token_address}', '${row.token_id}')">アクセサリーをつける</button></div>`;
+              return `<div id="${row.token_address}_${row.token_id}">${row.name} #${row.token_id} <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt=""> <button onclick="selectNFT('${row.token_address}', '${row.token_id}')">着せ替えする！</button></div>`;
             }
           })
           .join("");
@@ -133,19 +148,23 @@
 
       const dressUpCanvasContext = document.getElementById('dress-up-canvas').getContext('2d');
 
+      var selectedNFTMetadata = null;
+      var selectedNFTSymbol = null;
+      var moralisSelectedNFTMetadata = null;
+
       const selectNFT = async(address, token_id) => {
         var dressUpSvg = Snap("#dress-up-svg");
 
         // 最新のメタデータを取得する
         const selectedNFTMetadataOptions = { address: address, token_id: token_id, chain: baseNftChain };
         // console.log(selectedNFTMetadataOptions);
-        var selectedNFTMetadata = await Moralis.Web3API.token.getTokenIdMetadata(selectedNFTMetadataOptions);
+        selectedNFTMetadata = await Moralis.Web3API.token.getTokenIdMetadata(selectedNFTMetadataOptions);
         console.log(selectedNFTMetadata);
 
-        const selectedNFTSymbol = selectedNFTMetadata.symbol;
+        selectedNFTSymbol = selectedNFTMetadata.symbol;
         console.log("selectedNFTSymbol : " + selectedNFTSymbol);
-        const selectedNFTTokenUri = selectedNFTMetadata.token_uri;
-        console.log("selectedNFTTokenUri : " + selectedNFTTokenUri);
+        // const selectedNFTTokenUri = selectedNFTMetadata.token_uri;
+        // console.log("selectedNFTTokenUri : " + selectedNFTTokenUri);
 
         // 本来不要だが、取れる情報にattributeが無いので、仕方なくローカルのjsonを取ってくる
 
@@ -154,40 +173,61 @@
         const moralisSelectedNFTTokenUri = "./gen-res/LAG/token-uri/" + token_id + ".json";
         console.log("moralisSelectedNFTTokenUri : " + moralisSelectedNFTTokenUri);
 
-        var moralisSelectedNFTMetadata = await getNFTTokenUri(moralisSelectedNFTTokenUri);
+        moralisSelectedNFTMetadata = await getNFTTokenUri(moralisSelectedNFTTokenUri);
+
+        dressUp();
+      }
+
+      // 選択されているNFT、着せ替え設定で画像を作成する
+      async function dressUp() {
 
         // 画像の配列
         var imgs = Array();
 
         // 背景
-        // var partsUriBackground = getPartsUri(address, token_id, "background", selectedNFTMetadata.background);
+
+        // 標準の背景
+        // var partsUriBackground = getPartsUri(address, "background", selectedNFTMetadata.background);
         var backgroundJson = moralisSelectedNFTMetadata.attributes.find((v) => v.trait_type == 'Background');
-        var partsUriBackground = getPartsUri(selectedNFTSymbol, token_id, "background", backgroundJson.value);
+
+        let backgroundElems = document.getElementsByName("rdo-background");
+        let backgroundVal = "";
+        for (let i = 0; i < backgroundElems.length; i++) {
+          if (backgroundElems[i].checked){
+            backgroundVal = backgroundElems[i].value;
+          }
+        }
+        // 選択する背景
+        if (backgroundVal === "default") {
+          backgroundVal = backgroundJson.value;
+        }
+
+        var partsUriBackground = getPartsUri(selectedNFTSymbol, "background", backgroundVal);
         console.log("partsUriBackground : " + partsUriBackground);
         imgs.push(partsUriBackground);
 
         // 後ろ髪
         var hairJson = moralisSelectedNFTMetadata.attributes.find((v) => v.trait_type == 'Hair');
-        var partsUriBackhair = getPartsUri(selectedNFTSymbol, token_id, "backhair", hairJson.value);
+        var partsUriBackhair = getPartsUri(selectedNFTSymbol, "backhair", hairJson.value);
         console.log("partsUriBackhair : " + partsUriBackhair);
         imgs.push(partsUriBackhair);
 
         // 服
         var bodyJson = moralisSelectedNFTMetadata.attributes.find((v) => v.trait_type == 'Body');
-        var partsUriBody = getPartsUri(selectedNFTSymbol, token_id, "body", bodyJson.value);
+        var partsUriBody = getPartsUri(selectedNFTSymbol, "body", bodyJson.value);
         console.log("partsUriBody : " + partsUriBody);
         imgs.push(partsUriBody);
 
         // 顔
         var faceJson = moralisSelectedNFTMetadata.attributes.find((v) => v.trait_type == 'Face');
-        var partsUriFace = getPartsUri(selectedNFTSymbol, token_id, "face", faceJson.value);
+        var partsUriFace = getPartsUri(selectedNFTSymbol, "face", faceJson.value);
         console.log("partsUriFace : " + partsUriFace);
         imgs.push(partsUriFace);
 
         // TODO FaceのCatはGalの画像をあてている
 
         // 前髪
-        var partsUriFronthair = getPartsUri(selectedNFTSymbol, token_id, "fronthair", hairJson.value);
+        var partsUriFronthair = getPartsUri(selectedNFTSymbol, "fronthair", hairJson.value);
         console.log("partsUriFronthair : " + partsUriFronthair);
         imgs.push(partsUriFronthair);
 
@@ -199,13 +239,13 @@
           });
         };
 
+        // アクセサリー
+
         Promise.all(imgs.map(loadImage)).then(imgs => {
           imgs.forEach(img => {
-            dressUpCanvasContext.drawImage(img, 0, 0, 900, 900);
+            dressUpCanvasContext.drawImage(img, 0, 0, 600, 600);
           });
         });
-
-        // alert('it\'s work!');
       }
 
       // tokenURIのデータを取得する
@@ -226,7 +266,7 @@
       }
 
       // パーツのURLを返します。
-      function getPartsUri(symbol, token_id, parts, item_name) {
+      function getPartsUri(symbol, parts, item_name) {
         return `./gen-res/${symbol}/pics/${parts}/${item_name}.png`;
       }
 
@@ -234,6 +274,22 @@
         return ('000000000' + token_id).slice( zeroPaddingLength * -1 );
       }
 
+
+      function savePic() {
+        var canvas = document.getElementById("dress-up-canvas");
+        if (canvas.msToBlob) { //for IE
+          var blob = canvas.msToBlob();
+          window.navigator.msSaveBlob(blob, 'download.png');
+        } else {
+          //アンカータグを作成
+          var a = document.createElement('a');
+          a.href = canvas.toDataURL('image/jpeg', 0.85);
+          //ダウンロード時のファイル名を指定
+          a.download = 'download.jpg';
+          //クリックイベントを発生させる
+          a.click();
+        }
+      }
 
 
       // get stats on page load
