@@ -1,10 +1,18 @@
 <html>
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <!-- Moralis SDK code -->
     <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.5.1/snap.svg-min.js"></script>
-    <style>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+  <style>
       svg {
         display:block;
         width:80%;
@@ -14,30 +22,93 @@
     </style>
   </head>
   <body>
-    <h1>NFT Dress Up </h1>
+    <div class="container py-3">
+      <header class="p-3 bg-dark text-white">
+        <div class="container">
+          <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+              <li><a href="./index.html" class="nav-link px-2 text-white">Dress Up NFT</a></li>
+            </ul>
+    
+            <div class="text-end">
+              <button id="btn-login" type="button" class="btn btn-outline-light me-2 btn-primary">MetaMask Login</button>
+              <button id="btn-get-stats" type="button" class="btn btn-outline-light me-2">Refresh Stats</button>
+              <button id="btn-logout" class="btn btn-outline-light me-2">Logout</button>
+            </div>
+          </div>
+        </div>
+      </header>
 
-    <button id="btn-login">MetaMask Login</button>
-    <button id="btn-get-stats">Refresh Stats</button>
-    <button id="btn-logout">Logout</button>
+      <main class="p-3">
 
-    <div id="nfts"></div>
+        <div id="nfts" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3"></div>
+  
+        <div id="dress-up-area">
+          <div class="mb-2">
+            <canvas id="dress-up-canvas" width="600" height="600"></canvas>
+          </div>
+          <div class="container mb-4">
+            <div class="row">
+              <div class="col">
+                <label for="rdo-background" class="form-label">背景画像</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="rdo-background" value="default" onchange="dressUp();" checked>
+                  <label class="form-check-label" for="rdo-background">
+                    元からの背景
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="rdo-background" value="none" onchange="dressUp();">
+                  <label class="form-check-label" for="rdo-background">
+                    背景なし
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="rdo-background" value="Blue Pinstripe" onchange="dressUp();">
+                  <label class="form-check-label" for="rdo-background">
+                    Blue Pinstripe
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="rdo-background" value="Pink Pinstripe" onchange="dressUp();">
+                  <label class="form-check-label" for="rdo-background">
+                    Pink Pinstripe
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="rdo-background" value="Violet Pinstripe" onchange="dressUp();">
+                  <label class="form-check-label" for="rdo-background">
+                    Violet Pinstripe
+                  </label>
+                </div>
+              </div>
+              <div class="col">
+                <label for="rdo-acc" class="form-label">アクセサリー</label>
+                <div class="col">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="rdo-acc" value="none" onchange="dressUp();" checked>
+                    <label class="form-check-label" for="rdo-background">
+                      背景なし
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="rdo-acc" value="VeryLongApparel #8" onchange="dressUp();">
+                    <label class="form-check-label" for="rdo-background">
+                      VeryLongApparel #8
+                    </label>
+                  </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <!-- button id="btn-dress-up">着せ替え！</button -->
+            <button id="btn-save-pic" class="btn btn-primary">保存する！</button>
+  
+          </div>
+        </div>
+      </main>
 
-    <div id="dress-up-area">
-      <canvas id="dress-up-canvas" width="600" height="600"></canvas>
-      <div>
-        背景画像
-        <input type="radio" name="rdo-background" onchange="dressUp();" value="default" checked>元からの背景
-        <input type="radio" name="rdo-background" onchange="dressUp();" value="Blue Pinstripe">Blue Pinstripe
-        <input type="radio" name="rdo-background" onchange="dressUp();" value="Pink Pinstripe">Pink Pinstripe
-        <input type="radio" name="rdo-background" onchange="dressUp();" value="Violet Pinstripe">Violet Pinstripe
-      </div>
-      <div>
-        <!-- button id="btn-dress-up">着せ替え！</button -->
-        <button id="btn-save-pic">保存する！</button>
-
-      </div>
     </div>
-
 
     <script>
 
@@ -45,10 +116,13 @@
       const serverUrl = "https://9dtwybgsflwn.usemoralis.com:2053/server";
       const appId = "lSWuDXblZuRVzOGqeRUMrEho6UBRfIHtCrnY7TNF";
 
+      // LAG
       const baseNftAddress = "0x9c99d7f09d4a7e23ea4e36aec4cb590c5bbdb0e2";
       const baseNftImgHash = "QmWsNgLwBLiqGpUrhUS48ejRFAgUA92ChF6Xo45uMKWnmQ";
-      const tokenIdDigit = 4;
       const baseNftChain = "eth";
+
+      // VeryLongApparel
+
 
       // testnet
       // const serverUrl = "https://g9lvpe1ew1nl.usemoralis.com:2053/server";
@@ -56,9 +130,9 @@
 
       // const baseNftAddress = "0x90a3fba08fe9066ccbb4cab3e94301df7a4312c4";
       // const baseNftImgHash = "QmWsNgLwBLiqGpUrhUS48ejRFAgUA92ChF6Xo45uMKWnmQ";
-      // const tokenIdDigit = 4;
       // const baseNftChain = "rinkeby";
 
+      const tokenIdDigit = 4;
       var nfts = null;
 
       // connect to Moralis server
@@ -140,7 +214,22 @@
               var nowTokenId = zeroPadding(row.token_id, tokenIdDigit);
               console.log(`${row.token_id}`);
               // return `<div>token_address : ${row.token_address}, token_id : #${row.token_id}, name : ${row.name} <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt=""> </div>`;
-              return `<div id="${row.token_address}_${row.token_id}">${row.name} #${row.token_id} <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt=""> <button onclick="selectNFT('${row.token_address}', '${row.token_id}')">着せ替えする！</button></div>`;
+              // return `<div id="${row.token_address}_${row.token_id}">${row.name} #${row.token_id}
+              //           <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="128" height="128" alt="">
+              //           <button onclick="selectNFT('${row.token_address}', '${row.token_id}')">着せ替えする！</button>
+              //         </div>`;
+              return `<div class="card mb-4 rounded-3 shadow-sm">
+                        <div class="card-header bg-transparent py-3">
+                          <div class="fw-normal">${row.name} #${row.token_id}</div>
+                        </div>
+                        <div class="card-body">
+                          <img border="0" src="https://ipfs.moralis.io:2053/ipfs/${baseNftImgHash}/${nowTokenId}.png" width="256" height="256" alt="">
+                          <div class="my-2">
+                            <button type="button" class="w-100 btn btn-lg btn-outline-primary" onclick="selectNFT('${row.token_address}', '${row.token_id}')">Dress UP!</button>
+                          </div>
+                        </div>
+                      </div>`;
+
             }
           })
           .join("");
@@ -198,13 +287,15 @@
           }
         }
         // 選択する背景
-        if (backgroundVal === "default") {
-          backgroundVal = backgroundJson.value;
-        }
+        if (backgroundVal !== "none") {
+          if (backgroundVal === "default") {
+            backgroundVal = backgroundJson.value;
+          }
 
-        var partsUriBackground = getPartsUri(selectedNFTSymbol, "background", backgroundVal);
-        console.log("partsUriBackground : " + partsUriBackground);
-        imgs.push(partsUriBackground);
+          var partsUriBackground = getPartsUri(selectedNFTSymbol, "background", backgroundVal);
+          console.log("partsUriBackground : " + partsUriBackground);
+          imgs.push(partsUriBackground);
+        }
 
         // 後ろ髪
         var hairJson = moralisSelectedNFTMetadata.attributes.find((v) => v.trait_type == 'Hair');
@@ -240,7 +331,25 @@
         };
 
         // アクセサリー
+        let accElems = document.getElementsByName("rdo-acc");
+        let accVal = "";
+        for (let i = 0; i < accElems.length; i++) {
+          if (accElems[i].checked){
+            accVal = accElems[i].value;
+          }
+        }
+        if (accVal !== "none") {
+          if (accVal === "VeryLongApparel #8") {
+            var partsUriAcc = "https://lh3.googleusercontent.com/C03O0Vswgv96E0xbuGMj_11pm7g2kmmxynTh_Onv0Q45VbSpMx0-5vztEyHnIp0N4R0tIdT6TbaURsimv8nWTbYZ-wWtz3HjdjbY=s0"
+            console.log("partsUriAcc : " + partsUriAcc);
+            imgs.push(partsUriAcc);
+          }
+        }
 
+        // 画像のクリア
+        dressUpCanvasContext.clearRect(0, 0, dressUpCanvasContext.canvas.clientWidth, dressUpCanvasContext.canvas.clientHeight);
+
+        // 画像の描画
         Promise.all(imgs.map(loadImage)).then(imgs => {
           imgs.forEach(img => {
             dressUpCanvasContext.drawImage(img, 0, 0, 600, 600);
@@ -267,7 +376,7 @@
 
       // パーツのURLを返します。
       function getPartsUri(symbol, parts, item_name) {
-        return `./gen-res/${symbol}/pics/${parts}/${item_name}.png`;
+        return `./gen-res/${symbol}/parts/${parts}/${item_name}.png`;
       }
 
       function zeroPadding(token_id, zeroPaddingLength) {
