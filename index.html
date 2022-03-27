@@ -87,14 +87,20 @@
                 <div class="col">
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="rdo-acc" value="none" onchange="dressUp();" checked>
-                    <label class="form-check-label" for="rdo-background">
+                    <label class="form-check-label" for="rdo">
                       背景なし
                     </label>
                   </div>
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="rdo-acc" value="VeryLongApparel #8" onchange="dressUp();">
-                    <label class="form-check-label" for="rdo-background">
+                    <label class="form-check-label" for="rdo">
                       VeryLongApparel #8
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="rdo-acc" value="nouns glass green" onchange="dressUp();">
+                    <label class="form-check-label" for="rdo">
+                      nouns glass green
                     </label>
                   </div>
               </div>
@@ -343,7 +349,12 @@
             var partsUriAcc = "https://lh3.googleusercontent.com/C03O0Vswgv96E0xbuGMj_11pm7g2kmmxynTh_Onv0Q45VbSpMx0-5vztEyHnIp0N4R0tIdT6TbaURsimv8nWTbYZ-wWtz3HjdjbY=s0"
             console.log("partsUriAcc : " + partsUriAcc);
             imgs.push(partsUriAcc);
+          } else if (accVal === "nouns glass green") {
+            var partsUriAcc = "https://love-addicted-girls-test.s3.ap-northeast-3.amazonaws.com/gen-res/nouns/parts/acc/nouns-green.png";
+            console.log("partsUriAcc : " + partsUriAcc);
+            imgs.push(partsUriAcc);
           }
+          
         }
 
         // 画像のクリア
