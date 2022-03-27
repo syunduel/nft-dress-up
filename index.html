@@ -60,7 +60,7 @@
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="rdo-background" value="none" onchange="dressUp();">
                   <label class="form-check-label" for="rdo-background">
-                    背景なし
+                    なし
                   </label>
                 </div>
                 <div class="form-check">
@@ -88,7 +88,7 @@
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="rdo-acc" value="none" onchange="dressUp();" checked>
                     <label class="form-check-label" for="rdo">
-                      背景なし
+                      なし
                     </label>
                   </div>
                   <div class="form-check">
@@ -350,9 +350,10 @@
             console.log("partsUriAcc : " + partsUriAcc);
             imgs.push(partsUriAcc);
           } else if (accVal === "nouns glass green") {
-            var partsUriAcc = "https://love-addicted-girls-test.s3.ap-northeast-3.amazonaws.com/gen-res/nouns/parts/acc/nouns-green.png";
+            var partsUriAcc = "./gen-res/nouns/parts/acc/nouns-green.png";
             console.log("partsUriAcc : " + partsUriAcc);
             imgs.push(partsUriAcc);
+
           }
           
         }
